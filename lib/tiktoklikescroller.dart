@@ -48,7 +48,7 @@ class TikTokStyleFullPageScroller extends StatefulWidget {
   final ScrollEventCallback? onScrollEvent;
 
   /// CurrentIndex
-  final int? cardIndex;
+  final int cardIndex;
 
   @override
   _TikTokStyleFullPageScrollerState createState() =>
