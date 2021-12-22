@@ -16,14 +16,14 @@ typedef void ScrollEventCallback(ScrollEventType type, {int currentIndex});
 ///
 /// Use [TikTokStyleFullPageScroller] as you would `ListView.Builder()`
 class TikTokStyleFullPageScroller extends StatefulWidget {
-  const TikTokStyleFullPageScroller({
-    required this.contentSize,
-    required this.builder,
-    this.swipePositionThreshold = 0.20,
-    this.swipeVelocityThreshold = 1000,
-    this.animationDuration = const Duration(milliseconds: 300),
-    this.onScrollEvent,
-  });
+  const TikTokStyleFullPageScroller(
+      {required this.contentSize,
+      required this.builder,
+      this.swipePositionThreshold = 0.20,
+      this.swipeVelocityThreshold = 1000,
+      this.animationDuration = const Duration(milliseconds: 300),
+      this.onScrollEvent,
+      this.cardIndex = 0});
 
   /// The number of elements in the list,
   final int contentSize;
@@ -46,6 +46,9 @@ class TikTokStyleFullPageScroller extends StatefulWidget {
 
   /// An optional callback to be notified of different scroll events
   final ScrollEventCallback? onScrollEvent;
+
+  /// CurrentIndex
+  final int? cardIndex;
 
   @override
   _TikTokStyleFullPageScrollerState createState() =>
@@ -71,7 +74,7 @@ class _TikTokStyleFullPageScrollerState
       vsync: this,
       duration: widget.animationDuration,
     );
-    _cardIndex = 0;
+    _cardIndex = widget.cardIndex;
     _dragState = DragState.idle;
     super.initState();
   }
@@ -186,47 +189,46 @@ class _TikTokStyleFullPageScrollerState
     }
     _animation = Tween<double>(begin: _cardOffset, end: _end)
         .animate(_animationController)
-          ..addListener(_animationListener)
-          ..addStatusListener((AnimationStatus _status) {
-            switch (_status) {
-              case AnimationStatus.completed:
-                // change the card index if required,
-                // change the offset back to zero,
-                // change the drag state back to idle
-                int _newCardIndex = _cardIndex;
-                // we finished the scroll and updated the card
-                switch (_dragState) {
-                  case DragState.animatingForward:
-                    _newCardIndex++;
-                    widget.onScrollEvent?.call(ScrollEventType.SCROLLED_FORWARD,
-                        currentIndex: _newCardIndex);
-                    break;
-                  case DragState.animatingBackward:
-                    _newCardIndex--;
-                    widget.onScrollEvent?.call(
-                        ScrollEventType.SCROLLED_BACKWARDS,
-                        currentIndex: _newCardIndex);
-                    break;
-                  case DragState.animatingToCancel:
-                    //no change to card index
-                    break;
-                  default:
-                }
-
-                if (_status != AnimationStatus.dismissed &&
-                    _status != AnimationStatus.forward) {
-                  setState(() {
-                    _cardIndex = _newCardIndex;
-                    _dragState = DragState.idle;
-                    _cardOffset = 0;
-                  });
-                  _animation.removeListener(_animationListener);
-                  _animationController.reset();
-                }
+      ..addListener(_animationListener)
+      ..addStatusListener((AnimationStatus _status) {
+        switch (_status) {
+          case AnimationStatus.completed:
+            // change the card index if required,
+            // change the offset back to zero,
+            // change the drag state back to idle
+            int _newCardIndex = _cardIndex;
+            // we finished the scroll and updated the card
+            switch (_dragState) {
+              case DragState.animatingForward:
+                _newCardIndex++;
+                widget.onScrollEvent?.call(ScrollEventType.SCROLLED_FORWARD,
+                    currentIndex: _newCardIndex);
+                break;
+              case DragState.animatingBackward:
+                _newCardIndex--;
+                widget.onScrollEvent?.call(ScrollEventType.SCROLLED_BACKWARDS,
+                    currentIndex: _newCardIndex);
+                break;
+              case DragState.animatingToCancel:
+                //no change to card index
                 break;
               default:
             }
-          });
+
+            if (_status != AnimationStatus.dismissed &&
+                _status != AnimationStatus.forward) {
+              setState(() {
+                _cardIndex = _newCardIndex;
+                _dragState = DragState.idle;
+                _cardOffset = 0;
+              });
+              _animation.removeListener(_animationListener);
+              _animationController.reset();
+            }
+            break;
+          default:
+        }
+      });
     _animationController.forward();
   }
 
